@@ -27,7 +27,14 @@ class CommentEntry extends \ZendGData\Entry
      *
      * @var string
      */
-    protected $_entryClassName = 'ZendGData\YouTube\CommentEntry';
+  protected $_entryClassName = 'ZendGData\YouTube\CommentEntry';
+
+  /**
+   * yt:spam element
+   *
+   * @var \ZendGData\YouTube\Extension\Spam
+   */
+  protected $_spam = null;
 
     /**
      * Constructs a new ZendGData\YouTube\CommentEntry object.
@@ -38,6 +45,24 @@ class CommentEntry extends \ZendGData\Entry
     {
         $this->registerAllNamespaces(YouTube::$namespaces);
         parent::__construct($element);
+    }
+
+    public function hasSpamHint() {
+      return !!$this->_spam;
+    }
+
+    protected function takeChildFromDOM($child) {
+        $absoluteNodeName = $child->namespaceURI . ':' . $child->localName;
+        switch ($absoluteNodeName) {
+        case $this->lookupNamespace('yt') . ':' . 'spam':
+            $spam = new Extension\Spam();
+            $spam->transferFromDOM($child);
+            $this->_spam = $spam;
+            break;
+        default:
+            parent::takeChildFromDOM($child);
+            break;
+        }
     }
 
 }
