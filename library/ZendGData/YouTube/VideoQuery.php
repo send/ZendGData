@@ -25,11 +25,16 @@ use ZendGData\YouTube;
 class VideoQuery extends \ZendGData\Query
 {
 
+    protected $isStandardfeeds;
+    protected $regionId;
+
     /**
      * Create ZendGData\YouTube\VideoQuery object
      */
     public function __construct($url = null)
     {
+        $this->isStandardfeeds = false;
+        $this->regionId = false;
         parent::__construct($url);
     }
 
@@ -45,15 +50,19 @@ class VideoQuery extends \ZendGData\Query
         switch ($feedType) {
         case 'top rated':
             $this->_url = YouTube::STANDARD_TOP_RATED_URI;
+            $this->isStandardfeeds = true;
             break;
         case 'most viewed':
             $this->_url = YouTube::STANDARD_MOST_VIEWED_URI;
+            $this->isStandardfeeds = true;
             break;
         case 'recently featured':
             $this->_url = YouTube::STANDARD_RECENTLY_FEATURED_URI;
+            $this->isStandardfeeds = true;
             break;
         case 'mobile':
             $this->_url = YouTube::STANDARD_WATCH_ON_MOBILE_URI;
+            $this->isStandardfeeds = true;
             break;
         case 'related':
             if ($videoId === null) {
@@ -377,6 +386,16 @@ class VideoQuery extends \ZendGData\Query
         }
     }
 
+    public function getRegionId()
+    {
+        return $this->regionId;
+    }     
+
+    public function setRegionId($regionId)
+    {
+      $this->regionId = $regionId;
+    }
+
     /**
      * Generate the query string from the URL parameters, optionally modifying
      * them based on protocol version.
@@ -418,7 +437,15 @@ class VideoQuery extends \ZendGData\Query
         $minorProtocolVersion = null)
     {
         if (isset($this->_url)) {
-            $url = $this->_url;
+            if ($this->isStandardfeeds && $this->regionId) {
+                $splited = explode('/', $this->_url);
+                $feedId = array_pop($splited);
+                $splited[] = $this->regionId;
+                $splited[] = $feedId;
+                $url = implode('/', $splited);
+            } else {
+                $url = $this->_url;
+            }
         } else {
             $url = YouTube::VIDEO_URI;
         }
